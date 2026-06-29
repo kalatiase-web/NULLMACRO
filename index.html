@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UltraMacro — Precision Input Automation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0a0c12;
+    --bg2:       #0f1118;
+    --bg3:       #141820;
+    --border:    rgba(100,180,255,0.08);
+    --border2:   rgba(100,180,255,0.18);
+    --text:      #c8d0e0;
+    --text2:     #6a7a90;
+    --text3:     #3a4a5a;
+    --accent:    #00c8f0;
+    --accent2:   #7060f0;
+    --green:     #30d090;
+    --font:      'Inter', sans-serif;
+    --mono:      'JetBrains Mono', monospace;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-weight: 300;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(100,180,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(100,180,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(10,12,18,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  nav .wrap {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+  }
+  .nav-logo {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--text2); font-weight: 400; }
+  .nav-links { display: flex; gap: 28px; list-style: none; }
+  .nav-links a {
+    color: var(--text2); font-size: 13px; text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 140px 0 80px;
+    text-align: center;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,200,240,0.06);
+    border: 1px solid rgba(0,200,240,0.15);
+    border-radius: 100px;
+    padding: 5px 14px;
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 32px;
+  }
+  .hero-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .hero h1 {
+    font-size: clamp(40px, 7vw, 72px);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: #e8f0f8;
+    margin-bottom: 20px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    font-size: 17px;
+    color: var(--text2);
+    max-width: 500px;
+    margin: 0 auto 40px;
+    line-height: 1.7;
+  }
+  .hero-actions { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--accent);
+    color: #060810;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 13px 28px;
+    border-radius: 8px;
+    text-decoration: none;
+    border: none; cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 400;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); background: rgba(0,200,240,0.05); }
+
+  .hero-note {
+    margin-top: 18px;
+    font-size: 12px;
+    color: var(--text3);
+    font-family: var(--mono);
+  }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 0;
+    margin-bottom: 80px;
+  }
+  .stats-bar .wrap { display: flex; justify-content: center; gap: 60px; flex-wrap: wrap; }
+  .stat { text-align: center; }
+  .stat-num {
+    display: block;
+    font-size: 28px;
+    font-weight: 600;
+    color: #e8f0f8;
+    font-family: var(--mono);
+    letter-spacing: -0.02em;
+  }
+  .stat-num em {
+    font-style: normal;
+    color: var(--accent);
+  }
+  .stat-label { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  /* ── SECTION TITLES ── */
+  .section { padding: 64px 0; }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 600;
+    color: #e8f0f8;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .section-sub { font-size: 15px; color: var(--text2); max-width: 480px; line-height: 1.7; }
+
+  /* ── FEATURES GRID ── */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 48px;
+  }
+  .feature-card {
+    background: var(--bg2);
+    padding: 28px 24px;
+    transition: background 0.2s;
+  }
+  .feature-card:hover { background: var(--bg3); }
+  .feature-icon {
+    width: 36px; height: 36px;
+    background: rgba(0,200,240,0.08);
+    border: 1px solid rgba(0,200,240,0.15);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+    font-size: 16px;
+  }
+  .feature-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #e8f0f8;
+    margin-bottom: 6px;
+  }
+  .feature-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+  /* ── HOW IT WORKS ── */
+  .steps { margin-top: 48px; display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 20px;
+    padding: 28px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: start;
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(0,200,240,0.06);
+    border: 1px solid rgba(0,200,240,0.15);
+    border-radius: 6px;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-title { font-size: 15px; font-weight: 500; color: #e8f0f8; margin-bottom: 6px; }
+  .step-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .step-code {
+    margin-top: 10px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  /* ── REQUIREMENTS ── */
+  .req-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 36px;
+  }
+  .req-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .req-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; font-family: var(--mono); }
+  .req-val { font-size: 14px; color: #e8f0f8; font-weight: 500; }
+  .req-val.ok { color: var(--green); }
+
+  /* ── FAQ ── */
+  .faq { margin-top: 40px; display: flex; flex-direction: column; }
+  .faq-item { border-bottom: 1px solid var(--border); }
+  .faq-q {
+    width: 100%;
+    background: none;
+    border: none;
+    text-align: left;
+    padding: 20px 0;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    color: #e8f0f8;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  .faq-q:hover { color: var(--accent); }
+  .faq-q .arrow {
+    font-size: 18px;
+    color: var(--text2);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .faq-q.open .arrow { transform: rotate(45deg); color: var(--accent); }
+  .faq-a {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.7;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s;
+  }
+  .faq-a.open { max-height: 200px; padding-bottom: 18px; }
+
+  /* ── DOWNLOAD SECTION ── */
+  .download-box {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 48px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .download-box::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: 50%;
+    transform: translateX(-50%);
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(0,200,240,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .download-box h2 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #e8f0f8;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .download-box p { font-size: 14px; color: var(--text2); margin-bottom: 32px; }
+  .download-meta {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .download-meta span {
+    font-size: 12px;
+    color: var(--text3);
+    font-family: var(--mono);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .download-meta span::before { content: '◆'; font-size: 8px; color: var(--accent); }
+
+  /* ── KEY SYSTEM INFO ── */
+  .key-info {
+    background: rgba(0,200,240,0.04);
+    border: 1px solid rgba(0,200,240,0.12);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-top: 24px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .key-info-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .key-info-title { font-size: 13px; font-weight: 500; color: #e8f0f8; margin-bottom: 4px; }
+  .key-info-desc { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+    margin-top: 80px;
+  }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .footer-logo { font-family: var(--mono); font-size: 13px; color: var(--text2); }
+  .footer-note { font-size: 12px; color: var(--text3); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  @media (max-width: 600px) {
+    .stats-bar .wrap { gap: 32px; }
+    .download-box { padding: 32px 24px; }
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="wrap">
+    <a class="nav-logo" href="#">◆ ULTRA<span>MACRO</span></a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how-it-works">How it works</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#download">Download</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="wrap">
+  <section class="hero">
+    <div class="hero-badge">v1.0 — Now available</div>
+    <h1>Precision input<br>automation for <em>Roblox</em></h1>
+    <p class="hero-sub">High-performance macro tool with up to 5000 CPS, hardware-level input simulation, and a clean overlay that stays out of your way.</p>
+    <div class="hero-actions">
+      <a href="#download" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4 7l4 4 4-4M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Download free
+      </a>
+      <a href="#how-it-works" class="btn-secondary">How it works</a>
+    </div>
+    <p class="hero-note">Windows 10 / 11 &nbsp;·&nbsp; No game memory access &nbsp;·&nbsp; Input simulation only</p>
+  </section>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="wrap">
+    <div class="stat">
+      <span class="stat-num">5<em>k</em></span>
+      <span class="stat-label">Max CPS</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num"><em>3</em></span>
+      <span class="stat-label">Macro keys</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num"><em>QPC</em></span>
+      <span class="stat-label">Precision timing</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">0</span>
+      <span class="stat-label">Memory reads</span>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="wrap">
+  <section class="section" id="features">
+    <div class="section-label">Features</div>
+    <h2 class="section-title">Everything you need,<br>nothing you don't</h2>
+    <p class="section-sub">Built specifically for Roblox simulator grinding. No bloat, no background processes.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">Up to 5000 CPS</div>
+        <div class="feature-desc">Hardware-level SendInput with QueryPerformanceCounter timing. Accurate to microseconds.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-title">3 configurable keys</div>
+        <div class="feature-desc">Assign any keyboard key or mouse button (LMB, RMB, MMB) to each macro slot. Toggle individually.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎬</div>
+        <div class="feature-title">Custom wallpaper</div>
+        <div class="feature-desc">Load any image or video as a live background. The UI adapts its accent colour to match.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🪟</div>
+        <div class="feature-title">Compact overlay</div>
+        <div class="feature-desc">Minimise to a small floating overlay showing live CPS and click count. Drag it anywhere.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-title">Device-locked licence</div>
+        <div class="feature-desc">Your key works on your device only. One activation, no recurring prompts after that.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🛠</div>
+        <div class="feature-title">9 optimisation toggles</div>
+        <div class="feature-desc">Thread priority, CPU affinity, scan code mode, 1ms timer resolution — tune it to your system.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how-it-works">
+    <div class="section-label">How it works</div>
+    <h2 class="section-title">Up and running<br>in three steps</h2>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div>
+          <div class="step-title">Download and run</div>
+          <div class="step-desc">Download the EXE below. No installer needed — it's a single standalone file. Double-click to launch.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div>
+          <div class="step-title">Activate with your licence key</div>
+          <div class="step-desc">On first launch you'll see the activation screen. Your HWID is shown — send it to get your key, then paste it in and click Activate. The key is saved and never asked for again.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div>
+          <div class="step-title">Set your CPS and press your hotkey</div>
+          <div class="step-desc">Configure your target CPS with the slider or preset buttons. Jump into your game, then press your toggle hotkey (default: R) to start and stop the macro.</div>
+          <div class="step-code">Default hotkey: R &nbsp;·&nbsp; Keys: E, F, LMB</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIREMENTS -->
+  <section class="section">
+    <div class="section-label">Requirements</div>
+    <h2 class="section-title">System requirements</h2>
+    <div class="req-grid">
+      <div class="req-card">
+        <div class="req-label">OS</div>
+        <div class="req-val ok">Windows 10 / 11</div>
+      </div>
+      <div class="req-card">
+        <div class="req-label">Architecture</div>
+        <div class="req-val">64-bit only</div>
+      </div>
+      <div class="req-card">
+        <div class="req-label">Runtime</div>
+        <div class="req-val ok">None — standalone EXE</div>
+      </div>
+      <div class="req-card">
+        <div class="req-label">Internet</div>
+        <div class="req-val">For activation only</div>
+      </div>
+      <div class="req-card">
+        <div class="req-label">Admin rights</div>
+        <div class="req-val">Not required</div>
+      </div>
+      <div class="req-card">
+        <div class="req-label">Antivirus</div>
+        <div class="req-val">May need exclusion</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="section-label">FAQ</div>
+    <h2 class="section-title">Common questions</h2>
+
+    <div class="faq">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Is this allowed on Roblox?
+          <span class="arrow">+</span>
+        </button>
+        <div class="faq-a">
+          Roblox's Terms of Service do not prohibit input automation tools. UltraMacro only simulates keyboard and mouse inputs — it does not read game memory, inject code, or modify the Roblox client in any way. Individual games may have their own rules, so always check the specific game you're playing.
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Does it read game memory or inject anything?
+          <span class="arrow">+</span>
+        </button>
+        <div class="faq-a">
+          No. UltraMacro uses the Windows SendInput API to simulate keyboard and mouse inputs at the OS level — exactly the same as a hardware macro device or gaming mouse software. It has zero interaction with the Roblox process.
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          My antivirus flagged it — is it safe?
+          <span class="arrow">+</span>
+        </button>
+        <div class="faq-a">
+          False positives are common with compiled Python applications and tools that simulate input. The EXE is built from the source code on this page using PyInstaller. If your antivirus flags it, add an exclusion for the file or submit it for analysis — it contains no malicious code.
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Can I use my key on multiple PCs?
+          <span class="arrow">+</span>
+        </button>
+        <div class="faq-a">
+          Each key is locked to one device based on a hardware fingerprint. If you get a new PC, contact us and we'll issue a new key for your new device.
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          How do I get a licence key?
+          <span class="arrow">+</span>
+        </button>
+        <div class="faq-a">
+          Download the EXE, launch it, and copy your HWID from the activation screen. Then reach out via Discord (link below) with your HWID and we'll generate your key — usually within a few minutes.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD -->
+  <section class="section" id="download">
+    <div class="download-box">
+      <h2>Download UltraMacro</h2>
+      <p>Free to download. Licence key required to activate.</p>
+      <!-- 
+        REPLACE THE href BELOW with your actual EXE download link.
+        You can host the EXE on:
+          - Google Drive (get shareable link)
+          - GitHub Releases (upload as a release asset)
+          - MediaFire / MEGA (free file hosting)
+      -->
+      <a href="YOUR_DOWNLOAD_LINK_HERE" class="btn-primary" style="font-size:15px; padding:15px 36px;">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4 7l4 4 4-4M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Download UltraMacro.exe
+      </a>
+      <div class="download-meta">
+        <span>Windows 10 / 11</span>
+        <span>64-bit</span>
+        <span>Standalone EXE</span>
+        <span>v1.0</span>
+      </div>
+
+      <div class="key-info">
+        <div class="key-info-icon">🔑</div>
+        <div>
+          <div class="key-info-title">How to get your licence key</div>
+          <div class="key-info-desc">
+            Launch the EXE — your HWID is shown on the activation screen. 
+            Copy it and message us on Discord with your HWID. 
+            We'll send back your key within minutes. 
+            <!-- REPLACE with your actual Discord or contact link -->
+            <a href="YOUR_DISCORD_LINK" style="color: var(--accent); text-decoration: none;">Join our Discord →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <span class="footer-logo">◆ ULTRAMACRO</span>
+    <span class="footer-note">Input simulation only · No memory access · Windows 10/11</span>
+  </div>
+</footer>
+
+<script>
+  function toggleFaq(btn) {
+    const answer = btn.nextElementSibling;
+    const isOpen = btn.classList.contains('open');
+    document.querySelectorAll('.faq-q').forEach(b => {
+      b.classList.remove('open');
+      b.nextElementSibling.classList.remove('open');
+    });
+    if (!isOpen) {
+      btn.classList.add('open');
+      answer.classList.add('open');
+    }
+  }
+
+  // Smooth fade-in on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.feature-card, .step, .req-card').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px)';
+    el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>
